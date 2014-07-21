@@ -1,0 +1,29 @@
+{
+  "name": "likalyzer_client",
+  "version": "0.0.0",
+  "description": "",
+  "main": "app.js",
+  "dependencies": {
+    "angular-ui-router": "~0.2.10",
+    "angular": "~1.2.19"
+  },
+  "devDependencies": {
+    "connect-livereload": "~0.4.0",
+    "gulp-clean": "~0.3.1",
+    "gulp-concat": "~2.3.3",
+    "express": "~4.6.1",
+    "gulp-embedlr": "~0.5.2",
+    "tiny-lr": "0.0.9",
+    "gulp-livereload": "~2.1.0",
+    "gulp-util": "~2.2.20",
+    "gulp": "~3.8.6",
+    "gulp-jshint": "~1.7.1",
+    "gulp-browserify": "~0.5.0",
+    "browserify": "~4.2.1"
+  },
+  "scripts": {
+    "test": "mocha"
+  },
+  "author": "",
+  "license": "BSD"
+}
