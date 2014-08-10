@@ -4,53 +4,59 @@ var angular = require('angular');
 
 // Services
 var Authentication = require('./services/authentication_service');
+var UserSession = require('./services/user_session_service');
+var AuthInterceptor = require('./services/auth_interceptor_service');
 
 // Controllers
 var MainController = require('./controllers/main_controller');
 
+// Initial Scripts
+var FacebookInitializer = require('./config/initializers/facebook');
+var RouteRestrictor = require('./config/initializers/route_restrictor');
+
 // App
 var app = angular.module('likalyzer', [require('angular-ui-router')]);
 
-app.config(['$stateProvider', '$urlRouterProvider', '$locationProvider', '$httpProvider', function($stateProvider, $urlRouterProvider, $locationProvider, $httpProvider) {
-  $httpProvider.defaults.headers.common['X-Requested-With'] = 'XMLHttpRequest';
-
+app.config(['$stateProvider', '$urlRouterProvider', '$locationProvider', function($stateProvider, $urlRouterProvider, $locationProvider) {
   $locationProvider.html5Mode(true);
   $locationProvider.hashPrefix('!');
+
+  $stateProvider.state('home', {
+    url: '/',
+    templateUrl: 'templates/home.html',
+    access: {
+      loginRequired: true
+    }
+  });
+
+  $stateProvider.state('login', {
+    url: '/login',
+    templateUrl: 'templates/login.html',
+    access: {
+      loginRequired: false
+    }
+  });
 
   $urlRouterProvider.otherwise('/');
 }]);
 
-app.factory('Authentication', ['$http', Authentication]);
-app.controller('MainController', ['$scope', 'Authentication', MainController]);
+app.constant('AUTH_EVENTS', {
+  loginSuccess: 'auth-login-success',
+  loginFailed: 'auth-login-failed',
+  logoutSuccess: 'auth-logout-success',
+  notAuthenticated: 'auth-not-authenticated'
+});
 
-app.run(['$rootScope', '$window', 'Authentication', function($rootScope, $window, auth) {
-  $window.fbAsyncInit = function() {
-    FB.init({
-      appId: '306263542879837',
-      cookie: true,
-      status: true,
-      xfbml: true,
-      channelUrl: '/channel.html'
-    });
+app.config(function($httpProvider) {
+  $httpProvider.interceptors.push('AuthInterceptor');
+});
 
-    auth.watchAuthStatusChange();
-  };
+app.factory('UserSession', UserSession);
+app.factory('Authentication', ['$http', '$rootScope', 'AUTH_EVENTS', 'UserSession', Authentication]);
+app.factory('AuthInterceptor', ['$rootScope', '$q', AuthInterceptor]);
 
-  (function(d){
-    var js,
-    id = 'facebook-jssdk',
-    ref = d.getElementsByTagName('script')[0];
+app.controller('MainController', ['$scope', '$location', 'AUTH_EVENTS', 'Authentication', 'UserSession', MainController]);
 
-    if (d.getElementById(id)) {
-      return;
-    }
-
-    js = d.createElement('script');
-    js.id = id;
-    js.async = true;
-    js.src = '//connect.facebook.net/en_US/all.js';
-
-    ref.parentNode.insertBefore(js, ref);
-
-  }(document));
-}]);
+// Run initialization scripts
+app.run(['$window', 'Authentication', FacebookInitializer]);
+app.run(['$rootScope', '$location', RouteRestrictor]);

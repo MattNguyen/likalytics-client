@@ -11,19 +11,21 @@ var embedlr = require('gulp-embedlr');
 var refresh = require('gulp-livereload');
 var lrserver = require('tiny-lr')();
 var express = require('express');
+var logger = require('morgan');
 var livereload = require('connect-livereload');
 var livereloadport = 35728;
 var serverport = 5000;
 
 var server = express();
 server.use(livereload({port: livereloadport}));
+server.use(logger('dev'));
 server.use(express.static('./dist'));
 server.all('/*', function(req, res) {
-  res.sendfile('views/index.html', { root: 'dist' });
+  res.sendfile('index.html', { root: 'dist' });
 });
 
 gulp.task('lint', function() {
-  gulp.src('./app/*.js')
+  gulp.src('./app/**/*.js')
   .pipe(jshint())
   .pipe(jshint.reporter('default'));
 });
@@ -38,9 +40,13 @@ gulp.task('browserify', function() {
   .pipe(gulp.dest('dist/js'));
 });
 
-gulp.task('views', function() {
-  gulp.src('app/views/*.html')
-  .pipe(gulp.dest('dist/views/'))
+gulp.task('templates', function() {
+  gulp.src('app/templates/*.html')
+  .pipe(gulp.dest('dist/templates/'))
+  .pipe(refresh(lrserver));
+
+  gulp.src('app/index.html')
+  .pipe(gulp.dest('dist'))
   .pipe(refresh(lrserver));
 });
 
@@ -53,7 +59,7 @@ gulp.task('dev', function() {
     'browserify'
   ]);
 
-  gulp.watch(['app/views/**/*.html'], [
-    'views'
+  gulp.watch(['app/index.html', 'app/templates/**/*.html'], [
+    'templates'
   ]);
 });
